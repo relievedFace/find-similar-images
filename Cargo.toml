@@ -3,8 +3,7 @@ name = "find-similar-images"
 version = "0.1.0"
 authors = ["relievedFace <relievedFace@gmaile.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
 
 [dependencies]
 clap = "2.33.0"
