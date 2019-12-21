@@ -69,31 +69,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut similaritys = vec![];
     let mut checked = vec![false; paths.len()];
 
-    for i in 0..paths.len() {
-        let mut similarity = vec![images_info[i]];
+    for i in (0..paths.len()).rev() {
         if !checked[i] {
+            let mut similarity = vec![images_info[i]];
+            checked[i] = true;
             for j in 0..i {
-                if !checked[j] {
-                    match (images_info[i].hash, images_info[j].hash) {
-                        (Some(hash1), Some(hash2)) => {
-                            if distance(hash1, hash2, width * height) < threshold {
-                                similarity.push(images_info[j]);
-                                checked[j] = true;
-                            }
+                match (images_info[i].hash, images_info[j].hash, checked[j]) {
+                    (Some(hash1), Some(hash2), false) => {
+                        if distance(hash1, hash2, width * height) < threshold {
+                            similarity.push(images_info[j]);
+                            checked[j] = true;
                         }
-                        _ => continue,
                     }
+                    _ => continue,
                 }
             }
+            similarity.sort_by_key(|k| Reverse(k.modified));
+            similaritys.push(similarity);
         }
-        similarity.sort_by_key(|k| Reverse(k.modified));
-        similaritys.push(similarity);
-        checked[i] = true;
     }
 
     similaritys.sort_by_key(|k| k[0].modified);
 
-    for s in similaritys.iter() {
+    for s in similaritys.iter().filter(|s| s.len() > 1) {
         writeln!(
             writer,
             "{}",
