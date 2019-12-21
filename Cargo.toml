@@ -1,0 +1,12 @@
+[package]
+name = "find-similar-images"
+version = "0.1.0"
+authors = ["relievedFace <relievedFace@gmaile.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "2.33.0"
+rayon = "1.2.1"
+image = "0.22.3"
