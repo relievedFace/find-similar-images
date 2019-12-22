@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .arg(
             Arg::with_name("threshold")
-                .help("default value 4")
+                .help("default value 2")
                 .short("t")
                 .takes_value(true),
         );
@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = app.get_matches();
     let width = matches.value_of("width").unwrap_or("8").parse()?;
     let height = matches.value_of("height").unwrap_or("8").parse()?;
-    let threshold = matches.value_of("threshold").unwrap_or("4").parse()?;
+    let threshold = matches.value_of("threshold").unwrap_or("2").parse()?;
 
     let stdin = stdin();
     let reader = BufReader::new(stdin.lock());
