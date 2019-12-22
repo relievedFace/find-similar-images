@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in (0..paths.len()).rev() {
         if !checked[i] {
-            let mut similarity = vec![images_info[i]];
+            let mut similarity = vec![];
             checked[i] = true;
             for j in 0..i {
                 match (images_info[i].hash, images_info[j].hash, checked[j]) {
@@ -84,14 +84,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     _ => continue,
                 }
             }
-            similarity.sort_by_key(|k| Reverse(k.modified));
-            similaritys.push(similarity);
+            if !similarity.is_empty() {
+                similarity.push(images_info[i]);
+                similarity.sort_by_key(|k| Reverse(k.modified));
+                similaritys.push(similarity);
+            }
         }
     }
 
-    similaritys.sort_by_key(|k| k[0].modified);
+    similaritys.sort_by_key(|k| Reverse(k[0].modified));
 
-    for s in similaritys.iter().filter(|s| s.len() > 1) {
+    for s in similaritys.iter() {
         writeln!(
             writer,
             "{}",
