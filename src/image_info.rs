@@ -1,9 +1,8 @@
 use std::time::SystemTime;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone)]
 pub struct ImageInfo<'a> {
     pub path: &'a str,
-    pub modified: Option<SystemTime>,
-    pub hash: Option<u64>,
+    pub modified: SystemTime,
+    pub hash: u64,
 }
-

@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let paths: Vec<_> = reader.lines().flatten().collect();
 
-    let mut images_info = vec![ImageInfo::default(); paths.len()];
+    let mut images = vec![None; paths.len()];
     paths
         .par_iter()
         .map(|path| {
@@ -58,39 +58,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .ok();
             let modified = fs::metadata(path).map_or(None, |meta| meta.modified().ok());
-            ImageInfo {
-                path,
-                hash,
-                modified,
+            match (hash, modified) {
+                (Some(hash), Some(modified)) => Some(ImageInfo {
+                    path,
+                    hash,
+                    modified,
+                }),
+                _ => None,
             }
         })
-        .collect_into_vec(&mut images_info);
+        .collect_into_vec(&mut images);
 
-    let mut similaritys = vec![];
-    let mut checked = vec![false; paths.len()];
+    let images: Vec<_> = images.iter().flatten().collect();
 
-    for i in (0..paths.len()).rev() {
-        if !checked[i] {
-            let mut similarity = vec![];
-            checked[i] = true;
-            for j in 0..i {
-                match (images_info[i].hash, images_info[j].hash, checked[j]) {
-                    (Some(hash1), Some(hash2), false) => {
-                        if distance(hash1, hash2, width * height) < threshold {
-                            similarity.push(images_info[j]);
-                            checked[j] = true;
-                        }
-                    }
-                    _ => continue,
-                }
-            }
-            if !similarity.is_empty() {
-                similarity.push(images_info[i]);
-                similarity.sort_by_key(|k| Reverse(k.modified));
-                similaritys.push(similarity);
-            }
-        }
-    }
+    let mut similaritys: Vec<_> = images
+        .iter()
+        .enumerate()
+        .map(|(i, image0)| {
+            let mut similarity: Vec<_> = images[i..]
+                .iter()
+                .filter(|image1| distance(image0.hash, image1.hash, width * height) < threshold)
+                .collect();
+            similarity.sort_by_key(|k| Reverse(k.modified));
+            similarity
+        })
+        .filter(|x| x.len() >= 2)
+        .collect();
 
     similaritys.sort_by_key(|k| Reverse(k[0].modified));
 
