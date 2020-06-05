@@ -4,8 +4,10 @@ use find_similar_images::similarity::distance;
 use find_similar_images::similarity::CalcHash;
 use image;
 use image::FilterType;
+use itertools::Itertools;
 use rayon::prelude::*;
 use std::cmp::Reverse;
+use std::collections::BTreeSet;
 use std::fs;
 use std::io::{stdin, stdout, BufRead, BufReader, BufWriter, Write};
 
@@ -71,23 +73,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let images: Vec<_> = images.iter().flatten().collect();
 
-    let mut similaritys: Vec<_> = images
+    let similaritys: Vec<_> = images
         .iter()
-        .enumerate()
-        .map(|(i, image0)| {
-            let mut similarity: Vec<_> = images[i..]
-                .iter()
-                .filter(|image1| distance(image0.hash, image1.hash, width * height) < threshold)
-                .collect();
-            similarity.sort_by_key(|k| Reverse(k.modified));
-            similarity
-        })
-        .filter(|x| x.len() >= 2)
+        .combinations(2)
+        .filter(|image| distance(image[0].hash, image[1].hash, width * height) < threshold)
         .collect();
 
-    similaritys.sort_by_key(|k| Reverse(k[0].modified));
+    let mut similarity_images_list = vec![];
 
-    for s in similaritys.iter() {
+    let mut check = vec![true; similaritys.len()];
+    for (i, edge0) in similaritys.iter().enumerate() {
+        if check[i] {
+            check[i] = false;
+
+            let mut set = BTreeSet::new();
+            set.insert(edge0[0]);
+            set.insert(edge0[1]);
+
+            for (j, edge1) in similaritys.iter().enumerate() {
+                if i != j && check[j] && (set.contains(&edge1[0]) || set.contains(&edge1[1])) {
+                    check[j] = false;
+
+                    set.insert(edge1[0]);
+                    set.insert(edge1[1]);
+                }
+            }
+
+            let mut similarity_images: Vec<_> = set.iter().cloned().collect();
+            similarity_images.sort_by_key(|k| Reverse(k.modified));
+            similarity_images_list.push(similarity_images);
+        }
+    }
+
+    similarity_images_list.sort_by_key(|k| Reverse(k[0].modified));
+
+    for s in similarity_images_list.iter() {
         writeln!(
             writer,
             "{}",
