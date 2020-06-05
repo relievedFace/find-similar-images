@@ -80,8 +80,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     let mut similarity_images_list = vec![];
-
     let mut check = vec![true; similaritys.len()];
+
     for (i, edge0) in similaritys.iter().enumerate() {
         if check[i] {
             check[i] = false;
