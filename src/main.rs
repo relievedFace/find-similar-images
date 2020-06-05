@@ -42,8 +42,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let stdin = stdin();
     let reader = BufReader::new(stdin.lock());
-    let stdout = stdout();
-    let mut writer = BufWriter::new(stdout.lock());
 
     let paths: Vec<_> = reader.lines().flatten().collect();
 
@@ -71,10 +69,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .collect_into_vec(&mut images);
 
-    let images: Vec<_> = images.iter().flatten().collect();
-
     let similaritys: Vec<_> = images
         .iter()
+        .flatten()
         .combinations(2)
         .filter(|image| distance(image[0].hash, image[1].hash, width * height) < threshold)
         .collect();
@@ -87,6 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             check[i] = false;
 
             let mut set = BTreeSet::new();
+
             set.insert(edge0[0]);
             set.insert(edge0[1]);
 
@@ -100,12 +98,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             let mut similarity_images: Vec<_> = set.iter().cloned().collect();
+
             similarity_images.sort_by_key(|k| Reverse(k.modified));
             similarity_images_list.push(similarity_images);
         }
     }
 
     similarity_images_list.sort_by_key(|k| Reverse(k[0].modified));
+
+    let stdout = stdout();
+    let mut writer = BufWriter::new(stdout.lock());
 
     for s in similarity_images_list.iter() {
         writeln!(
