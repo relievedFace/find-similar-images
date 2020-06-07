@@ -50,4 +50,3 @@ pub fn distance(hash1: u64, hash2: u64, pixels: u32) -> u64 {
         .filter(|&x| hash1 & x != hash2 & x)
         .count() as u64
 }
-

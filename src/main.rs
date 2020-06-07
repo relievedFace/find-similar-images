@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .about("find similarity images")
         .arg(
             Arg::with_name("width")
-                .help(" default value: 8")
+                .help("default value: 8")
                 .short("w")
                 .takes_value(true),
         )
@@ -33,12 +33,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .help("default value 2")
                 .short("t")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("input cache file path")
+                .short("i")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("output cache file path")
+                .short("o")
+                .takes_value(true),
         );
 
     let matches = app.get_matches();
     let width = matches.value_of("width").unwrap_or("8").parse()?;
     let height = matches.value_of("height").unwrap_or("8").parse()?;
     let threshold = matches.value_of("threshold").unwrap_or("2").parse()?;
+    let input_catch_file_path = matches.value_of("input cache file path");
+    let output_catch_file_path = matches.value_of("output cach file path");
+
+    let chach = if let Some(input_catch_file_path) = input_catch_file_path {};
 
     let stdin = stdin();
     let reader = BufReader::new(stdin.lock());
@@ -49,7 +63,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     paths
         .par_iter()
         .map(|path| {
-            let hash = image::open(&path.replace(r" ", r"\ "))
+            let path = path.replace(r" ", r"\ ");
+            let metadata = fs::metadata(&path);
+            let modified = metadata.as_ref().map_or(None, |meta| meta.modified().ok());
+            let file_size = metadata.as_ref().map_or(None, |meta| Some(meta.len()));
+            let hash = image::open(&path)
                 .map(|image| {
                     image
                         .resize_exact(width, height, FilterType::Lanczos3)
@@ -57,11 +75,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .calc_hash()
                 })
                 .ok();
-            let modified = fs::metadata(path).map_or(None, |meta| meta.modified().ok());
-            match (hash, modified) {
-                (Some(hash), Some(modified)) => Some(ImageInfo {
+
+            match (hash, modified, file_size) {
+                (Some(hash), Some(modified), Some(file_size)) => Some(ImageInfo {
                     path,
                     hash,
+                    file_size,
                     modified,
                 }),
                 _ => None,
@@ -119,5 +138,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .join(" "),
         )?;
     }
+
     Ok(())
 }
