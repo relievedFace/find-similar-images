@@ -35,12 +35,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("input cache file path")
+            Arg::with_name("input cache file")
                 .short("i")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("output cache file path")
+            Arg::with_name("output cache file")
                 .short("o")
                 .takes_value(true),
         );
@@ -49,8 +49,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let width = matches.value_of("width").unwrap_or("8").parse()?;
     let height = matches.value_of("height").unwrap_or("8").parse()?;
     let threshold = matches.value_of("threshold").unwrap_or("2").parse()?;
-    let input_catch_file_path = matches.value_of("input cache file path");
-    let output_catch_file_path = matches.value_of("output cach file path");
+    let input_catch_file_path = matches.value_of("input cache file");
+    let output_catch_file_path = matches.value_of("output cach file");
 
     let chach = if let Some(input_catch_file_path) = input_catch_file_path {};
 
