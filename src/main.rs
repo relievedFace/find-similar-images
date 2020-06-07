@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     paths
         .par_iter()
         .map(|path| {
-            let hash = image::open(&path)
+            let hash = image::open(&path.replace(r" ", r"\ "))
                 .map(|image| {
                     image
                         .resize_exact(width, height, FilterType::Lanczos3)
@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             writer,
             "{}",
             s.iter()
-                .map(|x| x.path.to_string().replace(" ", "\\ "))
+                .map(|x| x.path.to_string().replace(r" ", r"\ "))
                 .collect::<Vec<_>>()
                 .join(" "),
         )?;
