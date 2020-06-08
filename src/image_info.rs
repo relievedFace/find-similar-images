@@ -1,9 +1,9 @@
-use std::time::SystemTime;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct ImageInfo {
     pub path: String,
-    pub modified: SystemTime,
+    pub modified: u64,
     pub file_size: u64,
     pub hash: u64,
 }
