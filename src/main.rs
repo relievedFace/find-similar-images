@@ -70,14 +70,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let images: Vec<_> = nocache_image_paths
         .into_par_iter()
         .map(|path| {
-            let metadata = fs::metadata(&path).ok()?;
-            let modified = metadata
-                .modified()
-                .ok()?
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .ok()?
-                .as_secs();
-            let file_size = metadata.len();
+            let modified = file_modified_as_sec(&path).ok()?;
+            let file_size = file_size(&path).ok()?;
 
             let hash = image::open(&path)
                 .map(|image| {
@@ -200,12 +194,8 @@ fn divide_cached_nocached(
     let mut cache_images = vec![];
     let mut nocache_image_paths = vec![];
     for path in paths {
-        let metadata = fs::metadata(&path)?;
-        let modified = metadata
-            .modified()?
-            .duration_since(SystemTime::UNIX_EPOCH)?
-            .as_secs();
-        let file_size = metadata.len();
+        let modified = file_modified_as_sec(&path)?;
+        let file_size = file_size(&path)?;
         match cache.get(path) {
             Some(image) if image.modified == modified && image.file_size == file_size => {
                 cache_images.push(image.clone())
@@ -214,4 +204,18 @@ fn divide_cached_nocached(
         }
     }
     Ok((cache_images, nocache_image_paths))
+}
+
+fn file_modified_as_sec(path: &str) -> Result<u64, Box<dyn std::error::Error>> {
+    let metadata = fs::metadata(&path)?;
+    let modified = metadata
+        .modified()?
+        .duration_since(SystemTime::UNIX_EPOCH)?
+        .as_secs();
+    Ok(modified)
+}
+
+fn file_size(path: &str) -> Result<u64, Box<dyn std::error::Error>> {
+    let metadata = fs::metadata(&path)?;
+    Ok(metadata.len())
 }
