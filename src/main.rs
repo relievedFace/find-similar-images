@@ -57,7 +57,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reader = BufReader::new(stdin.lock());
 
     let paths: Vec<_> = reader.lines().flatten().collect();
-
     let cache = input_cache_file_path
         .map(|path| read_cache(path).ok())
         .flatten();
