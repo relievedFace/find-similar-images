@@ -51,10 +51,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let width = matches.value_of("width").unwrap_or("8").parse()?;
     let height = matches.value_of("height").unwrap_or("8").parse()?;
     let threshold = matches.value_of("threshold").unwrap_or("2").parse()?;
-    let input_catch_file_path = matches.value_of("input_cache_file");
-    let output_catch_file_path = matches.value_of("output_cache_file");
+    let input_cache_file_path = matches.value_of("input_cache_file");
+    let output_cache_file_path = matches.value_of("output_cache_file");
 
-    let cache = read_cache(&input_catch_file_path.map(|x| x.to_string()));
+    let cache = input_cache_file_path
+        .map(|path| read_cache(path).ok())
+        .flatten();
     let cache = Mutex::new(&cache);
 
     let stdin = stdin();
@@ -143,33 +145,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     write_result(&similarity_images_list)?;
 
-    if let Some(path) = output_catch_file_path {
+    if let Some(path) = output_cache_file_path {
         write_cache(path, &images)?;
     }
 
     Ok(())
 }
 
-fn read_cache(path: &Option<String>) -> Option<HashMap<String, ImageInfo>> {
-    path.as_ref().map(|path| {
-        let cache_file =
-            fs::File::open(&path).expect(&format!("faile to open input cache file: {}", path));
-        let cache_file_buffer = BufReader::new(cache_file);
-        let mut reader = csv::Reader::from_reader(cache_file_buffer);
-        let mut cache = HashMap::new();
+fn read_cache(path: &str) -> Result<HashMap<String, ImageInfo>, Box<dyn std::error::Error>> {
+    let cache_file = fs::File::open(&path).expect(&format!("Faile to open file: {}", path));
+    let cache_file_buffer = BufReader::new(cache_file);
+    let mut reader = csv::Reader::from_reader(cache_file_buffer);
+    let mut cache = HashMap::new();
 
-        for (i, result) in reader.deserialize().enumerate() {
-            let image: ImageInfo =
-                result.expect(&format!("parse error file {}, line {}", path, i + 1));
-            cache.insert(image.path.clone(), image);
-        }
-        cache
-    })
+    for (i, result) in reader.deserialize().enumerate() {
+        let image: ImageInfo = result.expect(&format!("Error! file: {}, line: {}", path, i + 1));
+        cache.insert(image.path.clone(), image);
+    }
+    Ok(cache)
 }
 
 fn write_cache(path: &str, images: &Vec<ImageInfo>) -> Result<(), Box<dyn std::error::Error>> {
-    let cache_file =
-        fs::File::create(&path).expect(&format!("faile to open input cache file: {}", path));
+    let cache_file = fs::File::create(&path).expect(&format!("Faile to open file: {}", path));
     let mut cache_file_buffer = BufWriter::new(cache_file);
     let mut writer = csv::Writer::from_writer(vec![]);
 
@@ -178,7 +175,6 @@ fn write_cache(path: &str, images: &Vec<ImageInfo>) -> Result<(), Box<dyn std::e
     }
     let data = String::from_utf8(writer.into_inner()?)?;
 
-    dbg!(&data);
     write!(cache_file_buffer, "{}", data)?;
     Ok(())
 }
