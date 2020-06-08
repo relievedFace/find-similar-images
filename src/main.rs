@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|path| read_cache(path).ok())
         .flatten();
     let (mut cache_images, nocache_image_paths) = if let Some(cache) = cache {
-        divide_cached_nocached(&paths, &cache)?
+        split_cached_and_nocached(&paths, &cache)?
     } else {
         (vec![], paths)
     };
@@ -187,7 +187,7 @@ fn write_result(
     Ok(())
 }
 
-fn divide_cached_nocached(
+fn split_cached_and_nocached(
     paths: &Vec<String>,
     cache: &HashMap<String, ImageInfo>,
 ) -> Result<(Vec<ImageInfo>, Vec<String>), Box<dyn std::error::Error>> {
