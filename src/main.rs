@@ -177,7 +177,7 @@ fn write_result(
             writer,
             "{}",
             s.iter()
-                .map(|x| x.path.to_string())
+                .map(|x| x.path.to_string().replace(r" ", r"\ "))
                 .collect::<Vec<_>>()
                 .join(" "),
         )?;
