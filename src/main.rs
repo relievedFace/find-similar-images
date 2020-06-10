@@ -71,7 +71,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|path| {
             let modified = file_modified_as_sec(&path).ok()?;
             let file_size = file_size(&path).ok()?;
-
             let hash = image::open(&path)
                 .map(|image| {
                     image
@@ -80,6 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .calc_hash()
                 })
                 .ok()?;
+
             Some(ImageInfo {
                 path,
                 hash,
