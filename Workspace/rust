@@ -1,4 +1,0 @@
-use itertools::Itertools;
-fn main() {
-    let tmp:Vec<_>= (0..4).conbimations(2).collect();
-}
