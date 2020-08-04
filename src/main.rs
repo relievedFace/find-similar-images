@@ -140,7 +140,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn read_cache(path: &str) -> Result<HashMap<String, ImageInfo>, Box<dyn std::error::Error>> {
     let cache_file = fs::File::open(path).expect(&format!("Faile to open file: {}", path));
     let cache_file_buffer = BufReader::new(cache_file);
-    let mut reader = csv::Reader::from_reader(cache_file_buffer);
+    let mut reader = csv::ReaderBuilder::new()
+        .delimiter(b'\t')
+        .double_quote(true)
+        .from_reader(cache_file_buffer);
     let mut cache = HashMap::new();
 
     for (i, result) in reader.deserialize().enumerate() {
@@ -154,7 +157,10 @@ fn read_cache(path: &str) -> Result<HashMap<String, ImageInfo>, Box<dyn std::err
 fn write_cache(path: &str, images: &Vec<ImageInfo>) -> Result<(), Box<dyn std::error::Error>> {
     let cache_file = fs::File::create(path).expect(&format!("Faile to open file: {}", path));
     let mut cache_file_buffer = BufWriter::new(cache_file);
-    let mut writer = csv::Writer::from_writer(vec![]);
+    let mut writer = csv::WriterBuilder::new()
+        .delimiter(b'\t')
+        .quote_style(csv::QuoteStyle::NonNumeric)
+        .from_writer(vec![]);
 
     for image in images {
         writer.serialize(&image)?;
